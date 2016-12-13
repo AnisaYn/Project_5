@@ -1,0 +1,554 @@
+\documentclass[a4paper]{article}
+
+%\pagestyle{empty}
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=black]{hyperref}
+%%setting background
+\usepackage{transparent}
+\usepackage{eso-pic}
+\newcommand\BackgroundPic{%
+\put(0,0){%
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\centering
+{\transparent{0.4} \includegraphics[width=\paperwidth,height=\paperheight,%
+keepaspectratio]{Background.png}}%
+\vfill
+}}}
+% user package for caption
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+
+% caption
+\usepackage[
+labelfont=sf,
+hypcap=false,
+format=hang,
+width=0.7\columnwidth
+]{caption}
+
+\begin{document}
+\AddToShipoutPicture*{\BackgroundPic}
+\begin{titlepage}
+	\centering
+    
+    
+	{\scshape\Large FYS4150 \par}
+    {\Large\itshape Autumn 2016\par}
+	\vspace{1cm}
+    \vspace{2cm}
+     {\huge\bfseries Project 5\par}
+	{\huge\bfseries  Molecular dynamic simulation of Argon \par}
+	\vspace{1cm}
+    
+   
+    \vspace{1cm}
+    
+	
+    
+    \vfill
+	\par
+    
+	{\Large\itshape Anisa Yaseen \par}
+    {\scshape\LARGE University of Oslo \par}
+	\vspace{1cm}
+
+	\vfill
+	
+
+% Bottom of the page
+	{\large \today\par}
+    
+\end{titlepage}
+\begin{abstract}
+The purpose of this project is to study a very popular simulation called Molecular dynamics(MD). Macroscopic properties are often determined at molecular level. Qualitative and quantitative information of macroscopic behavior of molecules can be obtained from simulation of a system at molecule's atomic level. MD is a simulation widely used in thermodynamic physics, chemistry and biology. Where the simulation is used to calculate the motion of atoms in a molecular collection by using Newtonian dynamics to determined the net force and the accelerations experienced by each atoms, which helps to determine several thermodynamic properties.  We will in this project study the dynamics of argon atom and explore the phase space, which includes sampling the statistical properties such as; energy, temperature, and diffusion constant. The numerical ("practical") part of this project will be based on an object oriented code. 
+
+ {\scriptsize All source codes and programs used in this project are hosted on Github; I refer to the section (References)}
+\end{abstract}
+\tableofcontents
+\newpage
+\section{Introduction}
+\textbf{Molecular dynamics} is a computer simulation widely used to simulate many-particle(body) systems ranging from solids, liquids, gasses and bio-molecules on Earth, to the motion of stars and galaxies in the Universe. This is a technique where the time evolution of a set of interacting atoms is followed by integrating the famous equations of motion. In molecular dynamics or MD(in short) one follows the laws of classical mechanics, and most notably the second law of Newton: 
+\begin{equation}
+F_i =m_i a_i
+\end{equation}
+for each atom $i$ in a system constituted by $N$ atoms, here $m_i$ is the mass of atom, $a_i$ is its acceleration, and $F_i$ is the force acting upon it due to the interactions with neighboring atoms. We can say that it is a deterministic technique: with a given initial set of positions and velocities, the time evolution is in principle completely determined. In other words, atoms will move into the computer bumping into each other wandering around(in fluid), oscillating in waves in concert with neighboring atoms, and so on, in a sense pretty similar to how atoms in a real substance would behave. The computer calculates a trajectory in a $6-N$ dimensional phase space(see later); $3N$ positions and $3N$ momenta. MD is statistical mechanics method, it is a way to obtain a set of configurations distributed according to some statistical distribution function or statistical ensemble(see later). According to statistical physics, physical quantities are represented by averages over configurations distributed according to certain statistical ensemble. A such set of configurations is obtained by MD. Therefor, a measurement of a physical quantity by simulation is simply obtained as an arithmetic average of the various instantaneous values assumed by that quantity during the simulation(MD) run. Statistical physics gives the links between the microscopic behavior and thermodynamics. In the limits of very long simulation times, one could expect the phase space to be fully sampled and in that limit this averaging process would yield the thermodynamics properties. In practice the runs are always of finite length and one should exert caution to estimate when the sampling may be good or not. In this way , the MD simulations can be used to measure thermodynamics properties in physics. MD is used to examine the dynamics of atomic-level phenomena that is unobserved directly, such as thin film growth and ion-subplantation. It is also used to examine the physical properties of nanotechnological devices that have not been or cannot yet be fabricate. Molecular dynamics is concerned with simulating the motion of molecules to gain a deeper understanding of several physical phenomena that derive from molecular interactions. These studies include not only the motion of many molecules as in a fluid, but also the motion of a single large molecule consisting of hundreds or thousands of atoms, such as in a protein. MD methods are routinely used to investigate the structure, dynamics and thermodynamics of biological molecules and their complexes. These include, for example; Protein stability, molecular recognition(proteins, DNA, membranes), ion transport in biological systems, and help to carry out studies such as drug design, structure determination(X-ray and NMR). 
+
+MD in chemistry is used to study the chemical reaction $A+A \rightarrow B + B$. The reaction rate follows the Arrhenius law both for Lennard-Jones (see later) and hard sphere interaction potentials between substrate particles. For denser systems the reaction rate is proportional to the value of the radial distribution function at the contact point of two hard spheres. In this way, the MD is a very useful tool in chemistry as well. 
+
+
+\newpage
+\section*{PART I: Theory}
+\section{Molecular dynamic simulation of Argon}
+Let us consider $N$ atoms of Argon each with mass $m= 6.69\times 10^{-26}kg$, Ar is a close to ideal gas, a set of atoms follows simple ideal gas law $PV=nRT$. Each atom moves randomly without any interaction except the weak Lennard Jones interaction via the var der Waals force. Ar atoms behave almost like hard spheres and the behavior ( or velocity) is describe by the Maxwell Boltzmann distribution:
+\begin{equation}
+P(v)dv = \left(\frac{m}{2\pi k_B T}\right)^{\frac{1}{2}} exp\left(\frac{-mv^2}{2k_B T}\right)dv
+\end{equation}
+
+where $m$ is the mass of atom, $k_B$ is Boltzmann constant and $T$ is the temperature. The force between two argon atoms is approximated by the empirical Lennard-Jones potential energy function:
+\begin{equation}
+U(r_{ij}) = 4\epsilon \left[\left(\frac{\sigma}{r_{ij}}\right)^{12}-\left(\frac{\sigma}{r_{ij}}\right)^{6}\right]
+\end{equation}
+where $r_{ij} = \left |r_i - r_j \right |$ is the distance between the center of two atoms(from atom $i$ to atom $j$), $\epsilon = k_B \cdot 119,8K = 1.65\times 10^{-21}J$ is the strength(or depth) of the potential energy(well), and $\sigma = 3.405 A = 3.4\times 10^{-10}m$ is the distance at which the potential is zero. The first term $(1/r)^{12}$ in LHS represents a repulsive hard core interaction between the argon atoms and the seconds term $(1/r)^{6}$ represents an attractive dipole-dipole(van der Waals) interaction the non-polar atoms. This can be seen in figure \ref{fig:Lj}. The potential has its minimum $U(2^{\frac{1}{6}}\sigma) = -\epsilon$ at $r = 2^{\frac{1}{6}\sigma}$. The Lennard Jones force is derived from the Lennard-Jones potential as:
+\begin{equation}
+F(r_{ij}) = -\frac{dU(r_{ij})}{dr_{ij}} = \frac{24\epsilon}{\sigma} \left[2\left(\frac{\sigma}{r_{ij}}\right) ^{13}-\left(\frac{\sigma}{r_{ij}}\right)^{7}\right]
+\end{equation}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.7\textwidth]{Lennard_Jones.png}
+\caption{\label{fig:Lj}Schematic of Lennard Jones potential and force curve.}
+\end{figure}
+
+We can further relate above equation with \textbf{Newton's equations of motion}, since we knows that the force vector between atoms with position $r_i$ and $r_j$ are given by:
+\begin{equation}
+F_{on\: i\: by\: j} = -F_{on\: j\: by\: i} = 24(r_i - r_j)\left[2\left(\frac{1}{r}\right)^{-14} - \left(\frac{1}{r}\right)^{-8} \right]
+\end{equation}
+The net force on atom $i$ due to all of the other atoms $(N-1)$ is given by:
+\begin{equation}
+F_i = \sum_{j=1,j\neq i}^{N} F_{on i by j}
+\end{equation}
+The equation of motion for atom $i$ follows as:
+\begin{equation}
+a_i(t) \equiv \frac{dv_i(t)}{dt} = \frac{d^2r_i(t)}{dt^2} = \frac{F_i}{m}
+\end{equation}
+
+where $a_i$ and $v_i$ are the acceleration and velocity of atom $i$. If initial conditions, that is the values of positions $r_i(t_0)$ and velocities $v_i(t_0)$ of the particle are specified at some initial time $t_0$, these equation \textcolor{blue}{7} (the second order ordinary differential equations(ODE's)) have a unique solution as a function of time $t$. The equations can be integrated numerically by using Velocity Verlet algorithm one of many other algorithms developed by Verlet;
+
+\begin{align*}
+r_i(t+dt) = r_i(t) + v_i(d)dt + \frac{1}{2}a_i(t)dt^2 \\
+v_i(t+dt) = v_i(t) + \frac{1}{2}[a_i(t-dt)+a_i(t)]dt
+\end{align*}
+It can be shown that the errors in this algorithm are of order $\mathcal{O}(dt^4)$, and that it is very stable in MD applications and in particular conserves energy very well. 
+
+\subsection{Velocity distribution}
+The atoms are usually given velocities according to the Maxwell-Boltzmann distribution (equation \textcolor{blue}{2}) which result in a nonzero net momentum in the system. The Maxwell- Boltzmann distribution for momentum is given as: 
+\begin{equation}
+P(p_x) = \left(2\pi m k_B T\right)^{\frac{1}{1}} exp\left(-\frac{p^2_x}{2mk_B T}\right)
+\end{equation}
+where $p_x$ represents the momentum of the particle in $x$ direction. For 3 dimensional system we have $y$ and $z$ components as well. We know that the kinetic energy of a particle can be written as:
+\begin{equation}
+\left< K \right > = \frac{\left < p^2\right >}{2m}
+\end{equation}
+where $\left< K \right >$ mean the average of kinetic energy. The complete square momentum can be written as: $p^2 = p^2_x + p^2_y + p^2_z = 3p^2_x$. We have considered that there are $N$ particles in the simulation. Hence there are $3N$ components of the complete momentum. This can be written as:
+\begin{equation}
+\left< K \right > = \frac{3N\left < p^2\right >}{2m}
+\end{equation}
+
+\begin{equation}
+\left< K \right > = \frac{3N}{2m} \int_{-\infty}^{+\infty}P(p_x)p^2_x dp_x
+\end{equation}
+The above integral(the Gaussian integral) can be simple evaluated to:
+\begin{equation}
+\left< K \right > = \frac{3N k_B T}{2}
+\end{equation}
+We also know that the momentum and the kinetic energy are related through: $P  = mv$ thus the Eqs. \textcolor{blue}{8} and Eqs.\textcolor{blue}{9} can be rewritten as follow: 
+\begin{equation}
+P(v_i)dv_i = \left(\frac{m}{2\pi k_B T}\right)^{\frac{1}{2}}exp\left(-\frac{mv^2_i}{2k_BT}\right) dv_i
+\end{equation}
+\begin{equation}
+\left< K \right > = E_k = \frac{1}{2}mv^2
+\end{equation}
+We recognize this as a normal distribution with zero mean and stander deviation $\sigma = \sqrt{\frac{k_B T}{m}}$. This is also recognized as the Boltzmann distribution:
+\begin{equation}
+P(E) \propto e^{-\beta E}
+\end{equation}
+with $E=\frac{1}{2}mv^2$.  Eqs. \textcolor{blue}{12-15} tells us that the average kinetic energy is temperature related. The correct temperature can only be reproduced if all the atoms follow above relations for Kinetic energy. To ensure that one has the right averages for the Kinetic energy it is therefor necessary to use the Boltzmann distribution of velocities, because the Boltzmann distribution(and also Gaussian) gives the best probability function such that an atom will have a velocity at that given temperature. So, the average kinetic energy will give the required temperature.
+\subsection{Phase space}
+As I mentioned in section \textcolor{blue}{1}, one can calculate a trajectory in $6$ dimensional phase space by MD computer simulation. The question here arrives what do we mean by \textbf{phase space}? The answer to this question is that; In physics, phase space is a concept which unifies classical mechanics and quantum mechanics. In classical mechanics, the phase space is the space of all possible states of a physical system. By "state" it does not mean the positions of all particle in the system which would occupy the physical space, but also their velocities or momenta which would occupy the momentum space. In order to determine the future behavior of a system one needs both the position and momentum of the system. We can think of phase space as a graph, but a point on this graph would represent the whole state of a system. Let us assume we have box with 4 gas particle inside, each point in the phase space for this system tells us where all 4 particle are located in the box. 
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.6\textwidth]{Phase_space.png}
+\caption{\label{fig:P_S} "Schematic" of phase space}
+\end{figure}
+
+If we now only consider the position of the 4 particles, so each point in phase space must contain an x, y, and z coordinate for each particle so our phase space is 3N dimensional, where N is the number of particles in the system. Hence in our case, the phase space is 12 dimensional. 
+
+\subsection{Ensemble}
+An ensemble; is a collection of all possible systems which have different microscopic states but have an identical macroscopic or thermodynamic state. There are different ensembles with different characteristics.
+\begin{enumerate}
+\item Micro canonical ensemble(NVE); The state(thermodynamic state) characterized by a fixed number of atoms(N), a fixed volume(V), and a fixed energy(E), which corresponds to an isolated system.
+\item Canonical Ensemble(NVT); The state is characterized by a fixed number of atoms, fixed volume and fixed temperature(T). 
+\item Isobaric-Isothermal Ensemble(NPT); This ensemble is characterized by a fixed number of atoms, a fixed pressure(P) and a fixed temperature.
+\item Grand canonical Ensemble(mVT); This ensemble is characterized by a fixed chemical potential(m), a fixed volume and a fixed temperature. 
+\end{enumerate}
+\textsl{We are dealing with NVE in this project. }	
+
+\section{Limitations}
+Molecular dynamics is indeed a very powerful technique but has limitations, let us examine the most important of them. 
+\subsection{Use of classical forces}
+We know that systems at the atomic level obey quantum laws rather than classical laws, which means that Schrodinger's equation is the one to be followed, then how can we use Newton's law to describe the motion of atoms? A simple test on validity of the classical approximation in MD is based the de Broglie thermal wavelength defined as:
+\begin{equation}
+\Lambda = \sqrt{\frac{2\pi \hbar ^2}{mK_B T}}
+\end{equation}
+The classical approximation yields if $\Lambda << a$, where $a$ is the mean nearest neighbor separation. If we  consider liquids as the triplet point(where all 3 state; solid, liquid and gaseous phase coexist), $\Lambda/a$ is of order $0.1$ for light elements such as argon, decreasing further for heavier elements. The classical approximation is not good for very light system such as $H_2$, $He$. Quantum effects become important in any system when $T$ is sufficiently low. The drop in the specific heat of crystals below the Debye temperature $(\theta_D = \frac{h v_m}{k})$ is an example of measurable quantum effect in solids. Therefor the results of molecular dynamics should be interpreted with cautions in these regions. 
+\subsection{Realism of forces}
+While studying MD we can ask ourselves how realistic is a molecular dynamics simulation? In molecular dynamics we study the interactions of atoms with each other, these interactions have origin from forces that act upon atoms and atoms move under the action of these instantaneous forces. With the motion of atoms, their relative positions and forces changes. The essence of the physics is therefor constituted by the forces. A simulation mimics the behavior of the real system, only to extent that interatomic forces are similar to those that real atoms would experience when arrange in same configuration. We know we see in later section, force are derived from the gradient of a potential function depending on the positions of the particles. Therefor the realism of MD simulation depends on the ability of the selected(constructed/chosen) potential to reproduce the behavior of the particles under the conditions at which the simulations is run. 
+\subsection{Duration(Time) and size limitations}
+There is a practical and a "theoretical" limit to simulation time in molecular dynamics simulations.
+
+The practical limit; If we are looking at an atom and our goal is to accurately resolve something,  we need to have a sufficient number of temporal integration points per time scale of interest. Since we are looking at atoms and molecules, everything of interest is related to the motion and vibration of the atoms in the lattice.  Let’s look at a very simple example of simulating a single Cesium-133 atom(the atom is used in atomic clocks), it oscillates at $1e9$ Hz. To resolve 1 period of motion for the atom, we might need for instance, 100 temporal points per period.  We're looking at a time step of roughly $10^{-12}$(pico)s. In order to increase duration time (physical times), whole lot of time steps are required to get anywhere more practical. In problems like this example, it's easy to have a longer duration time. But if it took us 6 months to get let’s say 100 billion atom system to reach a point where we can get some statistical properties, another 6 months to get double the physical time may not be something affordable.  Many of the simulations have a duration time roughly at $10^{th}$ or $100^{th}$ of $10^{-15}$(femto)s in order to be stable and accurate, so just running a simulation longer is extremely expensive and undesirable.
+
+The "theoretical" limit:
+The Explicit Euler scheme; is simple but it imposes a time step restriction, and most importantly it is unconditionally unstable. Therefor it can be a bad choice. It doesn't conserve energy either and it will blow up eventually. The other reason is that, it is  first order, thus not really accurate. An alternative choice is a fully implicit method. These are unconditionally stable, allowing for arbitrarily large time steps, but in practice not a good choice. Because if we need to resolve the physical processes of interest, we must still select reasonable time scales. Before when we took 100 temporal steps per period, that is probably due to stability constraints, maybe we can only take 10 steps and still get good results if the method is stable. The down side is fully implicit methods typically require a global matrix inversion. These don't scale well in parallel as processor counts get large. 
+
+The semi-implicit methods, or symplectic methods are often used in MD. The most common method is the Verlet integration. As we have seen in previous projects we know that the Verlet (specifically), is a second-order accurate method, it allows much larger time steps compared to a fully explicit scheme, although smaller than a fully implicit scheme. The Verlet is energy conserving in theory, which is one of the most important aspect (NVE).The energy conserving in theory, but in practice no scheme is actually energy conserving.  Finite precision in hardware means errors accumulate over time. In other words if the duration time is at 0.01 femtoseconds and simulation ran 1 billion time steps, probably we accumulated some numerical error due just to finite precision.  Which means that the result is drifted and is wrong, but we will experience an unstable simulation and will blow up. Verlet has a tendency to do the latter and it will be unstable for large numbers of time steps. This mean  we can not just keep the simulation running longer,  it is either inaccurate or unstable. As an positive side, we run into more numerical precision errors. If we try to add something like 1e-19 to 1e-7, could lead to underflow,  which is  fixable by using higher precision numbers (quad instead of double) but then it just doubled memory space and probably compute time, so it will take many times longer in CPU time to get to the same physical time.
+
+As discussed; A simulation is  considered "safe" from the point of view of its duration when the simulation time is much longer than the relaxation time of the quantities we are interested in. However, different properties (statistical properties)have different relaxation times. In particular, systems tend to become slow in the proximity of phase transitions, and it is not uncommon to find cases where the relaxation time of a physical property is orders of magnitude larger than times achievable by simulation.A limited system size can also constitute a problem. In this case one has to compare the size of the MD cell with the correlation lengths of the spatial correlation functions of interest. The correlation lengths may increase or even diverge in proximity of phase transitions, and the results are no longer reliable when they become comparable with the box length. 
+
+\section{Periodic boundaries conditions}
+The system size is limited by available computer resources. A typical large MD simulation contains a few million atoms corresponding to a system much smaller than a cubic micron. In order to get rid to boundary effects, we apply periodic boundary conditions so that we simulate a system of infinite size. By applying periodic boundary conditions, particles are confined in a box, we can imagine that this box is have replicas to infinity in all the  three Cartesian coordinates(x, y, z). If one of our particles is located at a position $r$ in the box, we think that this particle really represents an infinite set of particles at $r+la+mb+nc$. All these "image" particles  move together, and only one of them is represented in the computer simulation. The point is that now each particle $i$ in the box should be considered as interacting not only with other particles $j$ in the box, but only with their images in nearby boxes. Which means interactions can "penetrate through" box boundaries. We can thereby say that: 
+we have virtually eliminated surface effects from our system
+there is no effect of box boundaries on the position(a translation of the box with respect to the particles does not change forces)
+
+As an effect of applied periodic boundary conditions the number of pairs(interacting pairs) increases. This is not true in practice due to potentials like Lennard Jones, usually having a short interaction range. The minimum image criterion resolves this issue. Although the periodic boundary conditions allow us to describe an infinite system of particles that approach a real system, it is still not an exact representation of reality. In introduce the translational invariance not present in the real system. 
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=0.4\textwidth]{PBC.png}
+\caption{\label{fig:PBC}PBC, As a particle moves out of the simulation box, an "image" particle moves in to replace it.}
+\end{figure}
+
+The code of BPC is simple, consider a $1D$ "box" of length $l$, if a particle leaves the box by crossing boundary, we add or subtract $l$ to the coordinate. One way of doing this to simply implement if-statement after the particle have been moves. Below we can see a code for $1D$, which can generalized to $3D$. 
+
+\begin{lstlisting}
+if (x > l_x)
+	x = x - l_x;
+else if (x < 0)
+	x = x + l_x
+\end{lstlisting}
+
+\subsection{The minimum image convention}
+By using a potential with a finite range(like Lennard Jones): when two particles are separated by a distance equal or larger than a cutoff distance $R_c$ they do not interact with each other. Let us assume that we are using a box whose size is larger than $2R_c$ along each Cartesian direction.
+
+With these conditions, it is clear that at most one among all the pairs formed by a particle $i$ in the box and the set of all the periodic images of another particle $j$ will interact. To demonstrate this further, let us suppose that particle $i$ interacts with two images $j_1$ and $j_2$ of particle $j$.  Two images must be separated by the translation vector bringing one box into another, and whose length is at least $2R_c$ (by hypothesis). Particle $i$ should be within a distance $R_c$ from each of them, in order to interact with both image particle $j_1$ and $j_2$, this is impossible since they are separated by more than $2R_c$. Limited by these conditions, we can safely use is the minimum image criterion: among all possible images of a particle $j$, select the closest, and throw away all the others.  These operating conditions simplify the set up of a MD simulation, and are used commonly. 
+
+
+\subsection{MSD}
+The mean square displacement of atoms in simulation is computed by its definition:
+\begin{equation}
+\delta r^2(t) = \left<\left|r(t) - r(0)\right|^2 \right >
+\end{equation}
+The MSD contains information such as atomic diffusivity. If the system is solid, MSD saturates to a finite value, and if the system is liquid, MSD grows linearly with time. In this case the systems behavior is characterized in terms of the slope, which is the diffusion coefficient D given by:
+\begin{equation}
+D = lim_{t\rightarrow \infty} \frac{1}{2dt} \left<\left|r(t) - r(0)\right|^2 \right >
+\end{equation}
+here $d$ is the dimensionality of the system (3 in our case)
+\section{Energies}
+Energies are the most important properties of interest in MD. The total energy is the sum of potential and kinetic energy, and during run both terms will balance each other to keep the total energy constant. 
+\subsection{Potential energy}
+The potential energy is obtained by averaging its instantaneous value, which is obtained at the same time as the force computation is made. In interaction of two-body we have: 
+\begin{equation}
+U(t) = \sum_{i} \sum_{j>i} \Phi \left( \left | r_i(t)-r_j(t)\right |\right)
+\end{equation}
+In order to verify energy conservation, one must know all forces. 
+\subsection{Kinetic energy}
+The instantaneous kinetic energy is given as:
+\begin{equation}
+K(t) = \frac{1}{2} \sum_{i} m_i [v_i(t)]^2
+\end{equation}
+and is easy to compute. 
+\subsection{Total energy}
+The total energy is of course $E = K + U $ a conserved quantity(in Newtonian dynamics). In MD it is common to compute it at each time step in order to check that it is indeed conserved, (constant with time). We will see that during the run energy flows back and forth between kinetic energy and potential energy causing them to fluctuate while their sum remains fixed. There should be a small fluctuation in total energy as well and these fluctuations are caused by errors in the time integration.  
+\section{The instantaneous temperature and The equipartition theorem}
+The equipartition theorem gives a connection between the average kinetic energy of particles and the temperature of the system. The theorem states that each degree of freedom contributes $1/2 k_B T$ to the internal energy of particle. We know that for a collection of atoms, there are only 3 degree of freedom corresponding to motion in the $x,y,z$ directions. From the equipartition theorem the internal energy of the system is therefor:
+
+\begin{equation}
+U = \frac{3}{2}Nk_B T
+\end{equation}
+where $N$ is the number of atoms and $3N$ is the number of degree of freedom. This energy(U) is also related to the kinetic energy as:
+\begin{equation}
+U = \left< T \right > = \left< K \right > = \left< \frac{1}{2}mv^2 \right > 
+\end{equation}
+Assumed that the particles have identical masses. Equating the above Eq. \textcolor{blue}{13}, and solving for the temperature yields: 
+\begin{equation}
+T = \frac{2}{3N k_B}\left< \frac{1}{2} m v^2 \right > = \frac{2}{3}\frac{K}{N k_B}
+\end{equation}
+Hence the "instantaneous temperature" $T(t)$ is proportional to the instantaneous kinetic energy $K(t)$ by a relation analogous to the one above. 
+
+\section*{PART II: The machinery}
+\section{Algorithms or The structure of program}
+\subsection{Nested list of classes}
+I have mentioned in previous section that in molecular dynamic simulation it is common to use the verlet time integration algorithm. I have also mentioned the reason behind using this method in MD. We have studies the verlet method in project 3 and the same algorithm can be reused in this project.  
+The code used in this project is a prepared code in an object oriented framework. The implementation consists of a collection of nested functions called by former one. We begin with using the $System$ class in order to implement the periodic boundary conditions. Secondly we set up the lattice by positioning each particle into face-centered cubic(FCC) crystal structure of the argon by implementing the function $createFCCLattice(...)$, and give them random velocities based on the Boltzmann distribution as a function of initial temperature ($T_i$), We also remove the total initial momentum. Beginning with the step function of the system class that, before advancing one step forward in time, class the function $integrator$ of the integrator class (velocity verlet). The integrator calls the function $calculateForces$ from the potential class. We integrate Lennard-Jones potential analytically as a function of the distance $r_{ij}$. The integrator derives the new positions and velocities in order to compute the based forces calculated previously. Since we have applied periodic boundary conditions in order to compute forces and positions of the particles, the particles can not escape the lattice. For loop repeats the step function a number of times and at each time steps thermodynamic properties of the system are calculated and stored into a file $"statistics.txt"$.  All the positions of the particles are also stored into a file and can be visualized with animation tool like OVITO. The flow chart is shown in figure below. 
+\begin{center}
+% Define block styles
+\pagestyle{empty}
+\tikzstyle{decision} = [diamond, draw, fill=blue!20, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=red!20, node distance=3cm,
+    minimum height=2em]
+    
+\begin{tikzpicture}[node distance = 2cm, auto]
+
+    % Place nodes
+    \node [block] (init) {Initialize};
+    \node [cloud, left of=init] (expert) {Initial $r$, $v$};
+    \node [block, below of=init] (identify) {Integration Force calculation};
+    \node [block, right of=init,node distance=3cm] (unit) {Unitary dimension};
+    \node [block, right of=unit, node distance=3cm] (lattice) {lattice setup};
+    \node [block, below of=lattice] (step) {Step};
+    \node [block, left of=step, node distance=3cm] (Int) {Integrator};
+    \node [block, below of=identify] (evaluate) {New $V$ and $r$};
+    \node [block, right of=evaluate, node distance=3cm] (advance) {Advance one time step};
+    \node [block, right of=advance, node distance=3cm]	(calculate) {Calculate properties};
+    %\node [block, left of=evaluate, node distance=3cm] (update) {Update};
+    %\node [decision, below of=evaluate] (decide) {Equilibrium is reached?};
+   
+    % Draw edges
+    \path [line] (init) -- (unit);
+   \path [line] (unit) -- (lattice);
+   \path [line] (lattice) -- (step);
+   \path [line] (step) -- (Int);
+   \path [line] (Int) -- (identify);
+   \path [line] (identify) -- (evaluate); 
+  	\path [line] (evaluate) -- (advance);
+  	\path [line] (advance) -- (calculate);
+    \path [line] (calculate) -- (step);
+    \path [line,dashed] (expert) -- (init);
+  
+ 
+\end{tikzpicture}
+\end{center}
+\subsection{Flow chart of MD}
+To start the MD run, we had to prepare several initial inputs, this is important to minimize the meaningless data and to have a reliable results:
+\begin{enumerate}
+\item \textbf{Number of atoms/system size} The number of atoms in the primary box have to be as small as possible as long as it can represent the real system. For a reliable data it is normally required to have more then $100$ atoms. 
+\item \textbf{Initial positions and velocities} To solve Newton's equations of motion, the initial positions and velocities must be provided. Initial positions of atoms could be anywhere but are normally specified according to the known lattice positions. The initial velocities of atoms could be all zero but normally chosen randomly from a Maxwell-Boltzmann distribution at a given time as described earlier in theory section, I refer to section \textcolor{blue}{2}. The directions of velocities are also chosen randomly to make the total linear momentum become zero. 
+\item \textbf{Timestep} Consider an annoying jumping kid (sometimes kids get quite annoying): He/she may travel two meters and stay in air for one second. In order to follow his/her trajectory, we must have a camera that can take at least $10-15$ frames in one second. Similarly, since atoms(atoms are not annoying, they are cute) in a solid lattice vibrate in the range of $10^{-14}$s, we have to do unit in range of $10^{-15}s \quad femtosecond$. This tiny time span is called timestep ($\Delta t$), in this timestep we assumed that the velocity, acceleration and the force om each atoms is constant therefor we perform simple algebraic calculations. By looking at equations in theory section we can say that atoms will move forward to the new positions by this time step. In order to speed up the run, a timestep is increased as much as possible as long as the energy conservation and the stability of the run are maintained. When the total energy becomes unstable or fluctuate too much it is an indication of too large time step that overshoots the equilibrium positions. For light mass atoms and for atoms that move very fast due to high temperature or have a steep potential curve, a shorter time step is chosen in MD simulations. \textbf{Total time}: A time steps of order $10^3-10^6$ corresponds to total simulation time of few hundred nanoseconds($10^{-9}$s). This is sufficient normally, runing MD too long will cause error accumulation and inefficiency of data. 
+
+\item \textbf{Integration} After giving all pre-steps and initial inputs, an actual MD run take place to bring the unrelaxed initial system to equilibrium under the given conditions, erasing any memory of the initial configuration. We solve Newtons equations of motion until the properties of the system no longer changes with time(an isolated system). And as result we have conservation of energy. As we will see later in plots, the fluctuation occur at the initial part of equilibration, but eventually atoms are driven to minimum values of potential energy where the net value of force on each atom become zero.
+The \textbf {integration of Newton's equations of motion} for the system proceeds as follow:
+\begin{enumerate}
+\item Calculate forces on all atoms from the given potential
+\item calculate acceleration $a_i$ on all atoms from the calculated $F_i$ using $a_i = F_i /m$.
+\item calculate $r_i$, $v_i$ and $a_i$ at later time $t + \Delta t$
+\item using the calculated data as inputs for the next round, repeat the process until equilibrium is reached and stable trajectories of atom results. 
+\end{enumerate}
+
+\item \textbf{Temperature control} Since our simulation run of micro canonical ensemble $NVE$, $NVE$ requires a constant temperature we achieved it by re-scaling velocities following the basic knowledge of kinetic energy. Referring to the equations in section \textcolor{blue}{6},  the temperature is directly related with average velocity as $\left < v \right>  \propto T^{\frac{1}{2}}$. Therefor we increase or decrease temperature from $T$ to $T^{l}$ by simply multiplying each velocity component by the same factor.
+
+\textbf{Data production} after MD run, data for atoms are saved, which includes phase space. Some properties such as energies and forces obtained directly, while other macroscopic properties were calculated from the trajectories of atoms. 
+
+\item \textbf{Analysis} Before we moved on to data after integration, it was necessary to confirm the reliability of the simulation. Which is done by confirming the energy conversation and momentum conservation. A flow chart is given below
+
+\end{enumerate} 
+
+
+\begin{center}
+% Define block styles
+
+\tikzstyle{decision} = [diamond, draw, fill=blue!20, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=red!20, node distance=3cm,
+    minimum height=2em]
+ 
+\begin{tikzpicture}[node distance = 2cm, auto]
+
+    % Place nodes
+    \node [block] (init) {Initialize};
+    \node [cloud, left of=init] (expert) {Initial $r$, $v$};
+    \node [block, below of=init] (identify) {PBC, $\Delta t$};
+    \node [block, below of=identify] (evaluate) {Integration Force calculation};
+    \node [block, left of=evaluate, node distance=3cm] (update) {Update};
+    \node [decision, below of=evaluate] (decide) {Equilibrium is reached?};
+    \node [block, below of=decide, node distance=3cm] (stop) {Data production};
+    % Draw edges
+    \path [line] (init) -- (identify);
+    \path [line] (identify) -- (evaluate);
+    \path [line] (evaluate) -- (decide);
+    \path [line] (decide) -| node [near start] {no} (update);
+    \path [line] (update) |- (identify);
+    \path [line] (decide) -- node {yes}(stop);
+    \path [line,dashed] (expert) -- (init);
+ 
+\end{tikzpicture}
+\end{center}  
+
+
+
+\section*{PART III: Analysis}
+\section{Implementation and results}
+Initially we have a system of $1000$ atoms arranged in $10 \times 10 \times 10$ cube. Nearly half the atoms in this sample size are on the outer faces, and these will effect our measured properties. By surrounding the cube with replicas of itself take cares of this problem, given that the potential range is not too long, we adopt the minimum image criterion as discussed above. This is also shown in figure \ref{fig:PBC}.
+We set the particles in a cubic-closed structure as shown in figure \ref{fig:FCC}, since this is the real crystal structure of Ar.
+\begin{figure}[!h]
+\centering
+\includegraphics[width=0.5\textwidth]{FCC.png}
+\caption{\label{fig:FCC}Face Centered Cubic(FCC) structure}
+\end{figure}
+
+We made a $FCC$ lattice of unit cell size b[A], the lattice constant. Each cell contains particle in position given: 
+
+\begin{align*}
+r_1 = 0\hat{i} + 0\hat{j} + 0\hat{k} \\
+r_2 = \frac{b}{2}\hat{i}  + \frac{b}{2}hat{j} + 0\hat{k} \\
+r_3 = 0i\hat{i}  + \frac{b}{2}\hat{j} + \frac{b}{2}\hat{k} \\
+r_4 = \frac{b}{2}\hat{i}  + 0\hat{j} + \frac{b}{2}\hat{k}
+\end{align*}
+ where $\hat{i} ,\hat{j},\hat{k}$ are orthogonal vectors. We create a $N_x \times N_y \times N_z$ such unit cell next to each other, so that the origin of unit cell$(i,j,k)$ is: 
+ \begin{equation}
+ R_{i,j,k} = ib\hat{i} + jb\hat{j} + kb\hat{k}
+ \end{equation}
+ where $i,j,k$ are integers. The lattice constant $b=5.26A$, which corresponds to real unit cell size in argon crystal. The density was calculated as:
+ \begin{align*}
+ \rho = \frac{\sum m_i}{V} = \frac{Nm}{Nb^3} = \frac{m}{b^3} \\
+ \Rightarrow \frac{6.63\times 10^{-26kg}}{1.45 \times 10 ^{-28}m^3} \\
+ \rho = 4.57 \times 10^5 \frac{kg}{m^3}
+ \end{align*}
+ 
+where $\sum m_i$ is the sum over all particles mass(argon atoms), $V$ is volume. After having initialized the particles positions and velocities we make the total linear momentum zero to prevent the entire cell from moving. This was easily achieved, thus we focused more on the energy conservation. The forces were computed according to equations described in theory section. The number of couple particles is $\frac{N^2}{2}$ and the number of particles $N$ scales as 4 times the cube of the number of unit cells per edge of the lattice, the number of calculations increased rapidly as the lattice dimension zcreased. In order to study the systems evolution and its dependency over initial conditions we computed several thermodynamic properties each time steps. The energies(kinetic, potential and total energy) were computed. We observed that the total energy was constant over time, hence no exchange of particles or energy. Therefor we verified the reliability of our algorithm by this simple test implementation. We also computed the temperature of the system as function of the average kinetic energy. We also analyzed data by using OVITO, and observed that as the temperature grew, the system evolved to a more chaotic state. We noticed that above a certain temperature(hence its melting point) our system lost its crystal structure. In order to estimate the melting temperature we computed the diffusion constant $D$ of the system. $D$ is defined as: 
+\begin{equation}
+\left< r^2(t) \right > = 6Dt \Rightarrow D = \frac{\left< r^2(t) \right >}{6t}
+\end{equation}
+We know that $D=0$ when the system is solid, so we expected it to be about $zero$ when argon has crystal structure, and around its melting point the diffusion constant grows steeply.
+We have ran our simulation for different values of initial temperature and visualized the system evolution, and took "snapshots" of the system. The lattice we used consists of $5\times 5 \times 5$ unit cells, which corresponds to 500 atoms. The results can be seen in figures("snapshots") below. 
+
+\begin{figure}[!htbp] 
+\centering
+\begin{minipage}{.55\textwidth}
+	\centering
+	\includegraphics[width=0.7\textwidth]{T_100K.png}
+    \captionsetup{width=0.7\linewidth}
+    \captionof{figure}{Snap shot of Ar crystal lattice at $T=100K$}
+    \label{fig:T_100}
+\end{minipage}%-
+\begin{minipage}{.55\textwidth}
+	\centering
+	\includegraphics[width=0.7\textwidth]{T_300K.png}
+    \captionsetup{width=0.7\linewidth}
+    \captionof{figure}{Snap shot of Ar crystal lattice at $T=300K$}
+    \label{fig:T_300}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[!htbp] 
+\centering
+\begin{minipage}{.55\textwidth}
+	\centering
+	\includegraphics[width=0.7\textwidth]{T_550K.png}
+    \captionsetup{width=0.7\linewidth}
+    \captionof{figure}{Snap shot of Ar crystal lattice at $T=550K$}
+    \label{fig:T_550}
+\end{minipage}%
+\begin{minipage}{.55\textwidth}
+	\centering
+	\includegraphics[width=0.7\textwidth]{T_780K.png}
+    \captionsetup{width=0.7\linewidth}
+    \captionof{figure}{Snap shot of Ar lattice at $T=780K$}
+    \label{fig:T_780}
+\end{minipage}
+
+\end{figure}
+
+In figure \ref{fig:T_100} to figure \ref{fig:T_780} we see the state of the system after few time steps is plotted for different final temperatures. We observe as expected that as the temperature grow the system becomes more and more chaotic and at this point, the atoms are no longer bonded to their positions in the crystal structure and the system make phase transition, i.e. becomes fluid.  We can see that in figure \ref{fig:T_780} . Although this phase transition indicates the melting point, it is not easy to detect the precise value of melting point graphically, therefor we needed to compute a new thermodynamic quantity namely, the diffusion constant, which is defined in Eqs. \textcolor{blue}{25}. We will see that result soon but before this let's include the energy plots.  
+\begin{figure}[!htbp] 
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[width=0.95\textwidth]{Energies_time_steps.png}
+    %\caption{Plot of $E_k, E_p$ and $E_{tot}$ vs $time_{steps}$.}
+    %\label{fig:E_vs_T}
+\end{minipage}%-
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[width=0.95\textwidth]{Energies_time_steps_zoomed.png}
+\end{minipage}
+\captionsetup{width=0.7\linewidth}
+    \captionof{figure}{Plot of kinetic energy $(E_k)$, potential energy $(E_p)$ and total energy $(E_{tot})$ as function of Time. Remember the x-axis shows the Time in $time_{steps} = 2000$. Right panel shows the zoomed picture of left panel.}
+
+\label{fig:E_vs_T}
+\end{figure}
+
+\begin{figure}[!htbp] 
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[width=0.95\textwidth]{Temp_time_steps.png}
+\captionsetup{width=0.7\linewidth}
+    \captionof{figure}{Temperature as function of time steps $\Delta t = 2000$, and temperature $T=450$ K.}
+    \label{fig:T_vs_ti}
+\end{minipage}%-
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[width=0.95\textwidth]{T_Over_Ti.png}
+    \captionsetup{width=0.7\linewidth}
+    \captionof{figure}{The ratio between final temperature $T$ and initial temperature , $T/T_{initial}$ as function of $T_{initial}$. $T_{initial} = 2000$}
+    \label{fig:T_vs_ti2}
+\end{minipage}
+\end{figure}
+Figure \ref{fig:E_vs_T} shows the energies as function of time steps, we see that the kinetic energy drops to roughly half its initial value, while the potential increase by the same amount. The growth of potential happens because the system loses its initial ordered crystalline structure, for which the energy had a minimum. We see from figure \ref{fig:T_vs_ti} that the temperature curve predicts same behavior, this is because the temperature is proportional to the kinetic energy. After this the system is thermalized and temperature and energies(kinetic and potential) fluctuate about a certain value. We can easily read from the plot (Temperature vs time step), the temperature fluctuates around a values of approximately $T = 200K$ - $T = 270K$.  The total energy remains constant for every time steps as expected(Referring to figure \ref{fig:E_vs_T}). This also confirms the reliability of algorithm. Figure \ref{fig:T_vs_ti2} shows the ratio between final and initial temperature is "almost" constant. The data is computed for a fixed volume, particularly for which the particles are confined in their crystalline structure. 
+
+\begin{figure}[!htbp] 
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[width=0.95\textwidth]{figure_2.png}
+   % \caption{$D$ as function of $T$}
+   % \label{fig:D_1}
+\end{minipage}%-
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[width=0.95\textwidth]{figure_4.png}
+\end{minipage}
+\captionsetup{width=0.7\linewidth}
+\captionof{figure}{Diffusion coefficient $(D)$ as function of temperature$(T)$, where $T$ ranges from $100K$ upto $900K$. Right panel shows the zoomed picture of left panel where temperature range is between approximately $400-700K$. Time step was set to $50000$}
+\label{fig:D_1}
+\end{figure}
+
+For the calculation of diffusion constant we had to increase the time step from $\Delta t = 2000$ to $ \Delta t = 50000$. Which gave us nice results but at the cost of run time. 
+If we now look at figure \ref{fig:D_1}, $D$ remains zero as expected and when the crystal melts is grow sharply and then scales as the temperature according to Einstein's relation ($D = \mu k_B T$, where $\mu$ is the mobility). For lower temperatures $D$ is negligible as expected, then it grows rapidly between $600K$ and $620K$ and keeps growing. Thus The melting temperature is about ($600K < T_{melting} > 620$), much higher than the melting temperature ($84K$) at standard conditions.  
+
+\newpage
+\section{Conclusion and experiences}
+Implementation worked nicely, the most time-consuming part of simulation was to compute forces and diffusion coefficient in last part of the project. The observation of data through plots and visualizing in OVITO have been very interested. The data observation and visualization gave a deeper understanding of the essence of molecular dynamic. When the number of particles were increased from $1000$ particles to $5000$ we notice a more stable value of the final temperature. When there were less particles in the system we observed the temperature and the energies(the kinetic energy and the potential energy) fluctuated more. The fluctuation is due to the fact that the variance of average energies decreases with the increasing number of particles (As mentioned in theory section the temperature is proportional to energies, same explanation yields for temperature fluctuation). \textbf{Error:} two kinds of error were introduced: Truncation error, which depends on the method itself and round of error, which depends on the implementation of the method. The truncation error was reduced by decreasing the step size. Luckily we did not came across the round off error since we used a "almost prepared" code where we used high precision arithmetic for avoiding round off error. After calculating the energies and once we constructed the $E-T$ curve we could predict the phase transition (melting). During and after equilibrium we stored various raw data for each time step including atomic positions, energies and force. We could also calculated other properties either directly or via statistical analysis from those data. Other thermodynamic properties which can be calculated in MD simulations are:
+\begin{enumerate}
+\item phase diagram in term of pressure and volume, 
+\item Heat capacity, 
+\item Thermal conductivity
+\item Melting point
+\item diffusion coefficient for liquid, etc
+\end{enumerate}
+
+By applying useful tricks to for instance cutting down the run time, we can compute various types of thermodynamic properties, of course it also depends one the choice of ensemble. MD is very fast and thus can handle much bigger system, however the limitation of MD include. 
+\begin{enumerate}
+\item The available potential is limited for multicomponent system, and the accuracy of a potential is always under question. In this example( or project) we have basically approximated the atoms as sphere with point mass at the center. Which implies that the electron's role is totally neglected. Though computation becomes drastically simple, the down side of this assumption. Since the electrons presence is neglected, which is origin of inter-atomic potential. Potential between atoms is generated empirically to carry out MD. 
+\item Length scale is still not macroscopic
+\item The time scale is also limited to nanoseconds
+\item No electromagnetic properties can b obtained. 
+
+\end{enumerate}
+\newpage
+\section{References}
+\bibliographystyle{apacite}
+\noindent $[1]$ Github address : \url {https://github.com/AnisaYn/Project_5} \\
+\noindent $[2]$ \url {https://github.com/andeplane/molecular-dynamics-fys3150}
+\\ $[3]$ M. Hjort-Jensen. Computational physics, lecture notes fall 2015. Department of Physics, University of Oslo, 2015
+\\ $[4]$ Daniel V. Schroeder: "An Introduction to Thermal Physics".
+\\ $[5]$ http://www.thp.uni-due.de/Paper/entel/entel-heraeus-springer-2004.pdf
+\\ $[6]$ http://www.physics.buffalo.edu/phy411-506-2008/chapter9/index.html
+\\ $[7]$ http://phycomp.technion.ac.il/~talimu/md2.html
+\\ $[8]$ $https://www2.msm.ctw.utwente.nl/sluding/THESIS/BSc_Bosch.pdf$
+\\ $[9]$ https://udel.edu/~arthij/MD.pdf
+\\ $[10]$ $http://www.ch.embnet.org/MD_tutorial/pages/MD.Part1.html$
+\\ $[11]$ http://comp-phys.net/2013/03/19/optimizing-your-c-code-for-molecular-dynamics/
+\\ $[12]$ Computational Materials Science An introduction by JUNE GUNN LEE
+\end{document}
+
